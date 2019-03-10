@@ -18,10 +18,7 @@ exports.verifyToken = function( req, res, next ) {
         req.user = decoded.user
 
         next();
-        // return res.status(200).json({
-        //     ok: true,
-        //     decoded,
-        // })
+
 
     });
 
