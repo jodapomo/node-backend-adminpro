@@ -4,13 +4,20 @@ var bcrypt = require('bcryptjs');
 var jwt = require('jsonwebtoken');
 var SEED = require('../config/config').SEED
 
+// Google
+var CLIENT_ID = require('../config/config').CLIENT_ID
+const { OAuth2Client } = require('google-auth-library');
+const client = new OAuth2Client(CLIENT_ID);
+
 var app = express();
 
 
 var User = require('../models/user');
 
 
-
+// ============================================
+// Normal auth
+// ============================================
 app.post('/', ( req, res ) => {
 
     var body = req.body;
@@ -52,17 +59,105 @@ app.post('/', ( req, res ) => {
             id: userDB._id,
         }); 
     });
-
-    
-
 });
 
 
+// ============================================
+// Google auth
+// ============================================
+
+async function verify(token) {
+    const ticket = await client.verifyIdToken({
+        idToken: token,
+        audience: CLIENT_ID,  // Specify the CLIENT_ID of the app that accesses the backend
+        // Or, if multiple clients access the backend:
+        //[CLIENT_ID_1, CLIENT_ID_2, CLIENT_ID_3]
+    });
+    const payload = ticket.getPayload();
+
+    return {
+        name: payload.name,
+        email: payload.email,
+        img: payload.picture,
+        google: true
+    }
+  }
 
 
+app.post('/google', async (req, res) => {
 
+    var token = req.body.token;
 
+    var googleUser = await verify(token)
+        .catch( e => {
+            return res.status(403).json({
+                ok: false,
+                message: 'Token not valid.'
+            }); 
+        });
 
+    User.findOne( { email: googleUser.email }, (err, userDB) => {
+
+        if (err) {
+            return res.status(500).json({
+                ok: false,
+                message: 'Error finding user',
+                errors: err,
+            })
+        }
+
+        if( userDB ) {
+            if ( userDB.google === false ) {
+                return res.status(400).json({
+                    ok: false,
+                    message: 'You must use your normal authentication',
+                    errors: err,
+                })
+            } else {
+                var token = jwt.sign({ user: userDB }, SEED, { expiresIn: 14400 }); // expires in 4 hours
+                
+        
+                res.status(200).json({
+                    ok: true,
+                    user: userDB,
+                    token,
+                    id: userDB._id,
+                }); 
+            }
+        } else {
+            // User no exist in db
+            var newUser = new User();
+
+            newUser.name = googleUser.name;
+            newUser.email = googleUser.email;
+            newUser.img = googleUser.img;
+            newUser.google = true;
+            newUser.password = ':)';
+            
+            newUser.save( (err, savedUser) => {
+
+                if (err) {
+                    return res.status(500).json({
+                        ok: false,
+                        message: 'Error saving and login user',
+                        errors: err,
+                    })
+                }
+
+                var token = jwt.sign({ user: savedUser }, SEED, { expiresIn: 14400 }); // expires in 4 hours
+                
+        
+                res.status(200).json({
+                    ok: true,
+                    user: savedUser,
+                    token,
+                    id: savedUser._id,
+                }); 
+            });
+        }
+
+    });
+});
 
 
 module.exports = app;
