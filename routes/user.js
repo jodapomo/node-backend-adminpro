@@ -16,7 +16,7 @@ app.get('/', (req, res, next) => {
 
     offset = Number(offset);
 
-    User.find({}, 'name email img role')
+    User.find({}, 'name email img role google')
         .skip(offset)
         .limit(5)
         .exec( (err, users) => {
@@ -95,7 +95,7 @@ app.put('/:id', mdAuth.verifyToken, ( req, res ) => {
 // ============================================
 // Create new user
 // ============================================
-app.post('/', mdAuth.verifyToken, ( req, res ) => {
+app.post('/', ( req, res ) => {
 
     var body = req.body;
 

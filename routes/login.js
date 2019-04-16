@@ -87,14 +87,21 @@ async function verify(token) {
 app.post('/google', async (req, res) => {
 
     var token = req.body.token;
+    
+    var validToken = true;
 
     var googleUser = await verify(token)
         .catch( e => {
+            validToken = false;
             return res.status(403).json({
                 ok: false,
                 message: 'Token not valid.'
             }); 
         });
+
+    if ( !validToken ) {
+        return;
+    }
 
     User.findOne( { email: googleUser.email }, (err, userDB) => {
 
