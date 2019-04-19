@@ -44,6 +44,43 @@ app.get('/', (req, res, next) => {
         });
 });
 
+// ============================================
+// Get one medic by id
+// ============================================
+app.get('/:id', (req, res, next) => {
+
+    var id = req.params.id;
+
+    Medic.findById(id)
+        .populate('user', 'name email img')
+        .populate('hospital')
+        .exec( (err, medic) => {
+
+            if (err) {
+                return res.status(500).json({
+                    ok: false,
+                    message: 'Error loading medic',
+                    errors: err,
+                })
+            }
+
+            if ( !medic ) {
+                return res.status(400).json({
+                    ok: false,
+                    message: 'Medic with id ' + id + ' does not exist.',
+                    errors: {
+                        message: 'Medic does not exist'
+                    }
+                });
+            }
+                
+            res.status(200).json({
+                ok: true,
+                medic
+            });
+            
+        });
+});
 
 // ============================================
 // Update medics

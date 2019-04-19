@@ -44,6 +44,42 @@ app.get('/', (req, res, next) => {
         });
 });
 
+// ============================================
+// Get Hospital by id
+// ============================================ 
+app.get('/:id', (req, res, next) => {
+
+    var id = req.params.id;
+
+    Hospital.findById(id)
+        .populate('user', 'name email img')
+        .exec( (err, hospital) => {
+
+            if (err) {
+                return res.status(500).json({
+                    ok: false,
+                    message: 'Error searching hospital',
+                    errors: err,
+                })
+            }
+
+            if ( !hospital ) {
+                return res.status(400).json({
+                    ok: false,
+                    message: 'Hospital with id ' + id + ' does not exist.',
+                    errors: {
+                        message: 'Hospital does not exist'
+                    }
+                });
+            }
+                
+            res.status(200).json({
+                ok: true,
+                hospital
+            });
+        });
+});
+
 
 // ============================================
 // Update hospital
