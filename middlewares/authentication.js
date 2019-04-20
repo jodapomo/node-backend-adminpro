@@ -23,3 +23,38 @@ exports.verifyToken = function( req, res, next ) {
     });
 
 }
+
+exports.verifyAdminRole = function( req, res, next ) {
+
+    var user = req.user;
+
+    if ( user.role === 'ADMIN_ROLE' ) {
+        next();
+        return;
+    } else {
+        return res.status(401).json({
+            ok: false,
+            message: 'Invalid token - NO ADMIN',
+            errors: { message: 'You are not an administrator, you can not do that.'},
+        }) 
+    }
+
+}
+
+exports.verifyAdminRoleOrSelf = function( req, res, next ) {
+
+    var user = req.user;
+    var id = req.params.id;
+
+    if ( user.role === 'ADMIN_ROLE' || user._id === id ) {
+        next();
+        return;
+    } else {
+        return res.status(401).json({
+            ok: false,
+            message: 'Invalid token - NO ADMIN or the same user',
+            errors: { message: 'You are not an administrator, you can not do that.'},
+        }) 
+    }
+
+}

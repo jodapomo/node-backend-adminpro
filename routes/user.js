@@ -45,7 +45,7 @@ app.get('/', (req, res, next) => {
 // ============================================
 // Update user
 // ============================================
-app.put('/:id', mdAuth.verifyToken, ( req, res ) => {
+app.put('/:id', [mdAuth.verifyToken, mdAuth.verifyAdminRoleOrSelf], ( req, res ) => {
 
     var id = req.params.id;
     var body = req.body;
@@ -129,7 +129,7 @@ app.post('/', ( req, res ) => {
 // ============================================
 // Delete user by id
 // ============================================
-app.delete('/:id', mdAuth.verifyToken, (req, res) => {
+app.delete('/:id', [mdAuth.verifyToken, mdAuth.verifyAdminRole], (req, res) => {
     
     var id = req.params.id;
     
