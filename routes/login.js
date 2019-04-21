@@ -14,6 +14,23 @@ var app = express();
 
 var User = require('../models/user');
 
+var mdAuth = require('../middlewares/authentication');
+
+// ============================================
+// Refresh token
+// ============================================
+app.get('/renewtoken', mdAuth.verifyToken, ( req, res ) => {
+
+    var token = jwt.sign({ user: req.user }, SEED, { expiresIn: 14400 });
+
+
+    res.status(200).json({
+        ok: true,
+        token
+    }); 
+
+});
+
 
 // ============================================
 // Normal auth
